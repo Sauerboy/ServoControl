@@ -16,23 +16,26 @@ entity HSPG is
         IO_DATA     : in  std_logic_vector(15 downto 0);
         CLOCK       : in  std_logic;
         RESETN      : in  std_logic;
-        PULSE       : out std_logic
+        PULSE       : out std_logic;
+		  safeCommand_out : out std_logic_vector(7 downto 0);
+		  count_out   : out std_logic_vector(7 downto 0)  -- internal counter
     );
 end HSPG;
 
 architecture a of HSPG is
 
-    signal command : std_logic_vector(15 downto 0);  -- command sent from SCOMP
-    signal count   : std_logic_vector(15 downto 0);  -- internal counter
+    signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
+	 signal safeCommand : std_logic_vector(7 downto 0);
+	 signal count   : std_logic_vector(7 downto 0) := "11000110";  -- internal counter strt at c6 to get rid of empty period
 
 begin
 
     -- Latch data on rising edge of CS
     process (RESETN, CS) begin
         if RESETN = '0' then
-            command <= x"0000";
+            command <= x"00";
         elsif IO_WRITE = '1' and rising_edge(CS) then
-            command <= IO_DATA;
+            command <= IO_DATA(7 downto 0);
         end if;
     end process;
 
@@ -42,19 +45,24 @@ begin
     process (RESETN, CLOCK)
     begin
         if (RESETN = '0') then
-            count <= x"0000";
+            count <= x"c6";
+				pulse <= '0';
         elsif rising_edge(CLOCK) then
             count <= count + 1;
-            if count = x"00C7" then  -- 20 ms has elapsed
+            if (count = x"c7") then  -- 20 ms has elapsed
                 -- Reset the counter and set the output high.
-                count <= x"0000";
-                PULSE <= '1';
-            elsif count = command then
+                count <= x"00";
+					 PULSE <= '1';
+            elsif count = safeCommand then
                 -- Once the count reaches the command value, set the output low.
                 -- This will make larger command values produce longer pulses.
                 PULSE <= '0';
             end if;
         end if;
     end process;
+	 safeCommand <= x"18" WHEN command > x"14" else
+						 command + x"04";
+	 safeCommand_out <= safeCommand;
+	 count_out <= count;
 
 end a;
