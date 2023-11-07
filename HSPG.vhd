@@ -16,9 +16,7 @@ entity HSPG is
         IO_DATA     : in  std_logic_vector(15 downto 0);
         CLOCK       : in  std_logic;
         RESETN      : in  std_logic;
-        PULSE       : out std_logic;
-		  safeCommand_out : out std_logic_vector(7 downto 0);
-		  count_out   : out std_logic_vector(7 downto 0)  -- internal counter
+        PULSE       : out std_logic
     );
 end HSPG;
 
@@ -26,7 +24,7 @@ architecture a of HSPG is
 
     signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
 	 signal safeCommand : std_logic_vector(7 downto 0);
-	 signal count   : std_logic_vector(7 downto 0) := "11000110";  -- internal counter strt at c6 to get rid of empty period
+    signal count   : std_logic_vector(7 downto 0);  -- internal counter
 
 begin
 
@@ -45,14 +43,13 @@ begin
     process (RESETN, CLOCK)
     begin
         if (RESETN = '0') then
-            count <= x"c6";
-				pulse <= '0';
+            count <= x"00";
         elsif rising_edge(CLOCK) then
             count <= count + 1;
             if (count = x"c7") then  -- 20 ms has elapsed
                 -- Reset the counter and set the output high.
                 count <= x"00";
-					 PULSE <= '1';
+                PULSE <= '1';
             elsif count = safeCommand then
                 -- Once the count reaches the command value, set the output low.
                 -- This will make larger command values produce longer pulses.
@@ -60,9 +57,7 @@ begin
             end if;
         end if;
     end process;
-	 safeCommand <= x"18" WHEN command > x"14" else
-						 command + x"04";
-	 safeCommand_out <= safeCommand;
-	 count_out <= count;
+	 safeCommand <= x"19" WHEN command > x"14" else
+						 command + x"05";
 
 end a;
