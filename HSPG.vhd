@@ -24,7 +24,7 @@ architecture a of HSPG is
 
     signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
 	 signal safeCommand : std_logic_vector(7 downto 0);
-    signal count   : std_logic_vector(7 downto 0);  -- internal counter
+    signal count   : std_logic_vector(7 downto 0) := "11000110";  -- internal counter
 
 begin
 
@@ -43,7 +43,7 @@ begin
     process (RESETN, CLOCK)
     begin
         if (RESETN = '0') then
-            count <= x"00";
+            count <= x"c6";
         elsif rising_edge(CLOCK) then
             count <= count + 1;
             if (count = x"c7") then  -- 20 ms has elapsed
