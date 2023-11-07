@@ -1,0 +1,73 @@
+library IEEE;
+library lpm;
+use IEEE.std_logic_1164.all;
+use IEEE.std_logic_unsigned.all;
+use IEEE.std_logic_arith.all;
+use lpm.lpm_components.all;
+
+entity HSPGACCEL is
+    port(
+        CS          : in  std_logic;
+        IO_WRITE    : in  std_logic;
+        IO_DATA     : in std_logic_vector(15 downto 0);
+        CLOCK       : in std_logic;
+        RESETN      : in std_logic;
+        PULSE       : out std_logic;
+        safeCommand_out : out std_logic_vector(7 downto 0);
+        count_out   : out std_logic_vector(7 downto 0)  -- internal counter
+    );
+end HSPGACCEL;
+
+architecture b of HSPGACCEL is
+    signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
+    signal safeCommand : std_logic_vector(7 downto 0);
+    signal count : std_logic_vector(7 downto 0) := "11000110";  -- internal counter starts at c6 to get rid of empty period
+    signal velocity : std_logic_vector(7 downto 0) := "00000000";  -- Servo velocity
+    constant MAX_VELOCITY : std_logic_vector(7 downto 0) := "00001000";  -- Maximum velocity
+    constant ACCELERATION : std_logic_vector(7 downto 0) := "00000001";  -- Acceleration value
+
+begin
+    process (RESETN, CS) begin
+        if RESETN = '0' then
+            command <= x"00";
+        elsif IO_WRITE = '1' and rising_edge(CS) then
+            command <= IO_DATA(7 downto 0);
+        end if;
+    end process;
+
+    process (RESETN, CLOCK) begin
+        if RESETN = '0' then
+            count <= x"c6";
+            velocity <= "00000000";
+            PULSE <= '0';
+        elsif rising_edge(CLOCK) then
+            count <= count + 1;
+
+            if (count = x"c7") then
+                count <= x"00";
+                PULSE <= '1';
+                velocity <= "00000000";
+            elsif count = safeCommand then
+                PULSE <= '0';
+            end if;
+
+            if safeCommand /= command then
+                if safeCommand > command then
+                    velocity <= velocity - ACCELERATION; -- Decelerate as it is larger
+                else
+                    velocity <= velocity + ACCELERATION; -- accel
+                end if;
+
+                if velocity > MAX_VELOCITY then
+                    velocity <= MAX_VELOCITY;
+                end if;
+                safeCommand <= safeCommand + velocity;
+            end if;
+        end if;
+    end process;
+
+    safeCommand <= x"18" WHEN command > x"14" else
+        command + x"04";
+    safeCommand_out <= safeCommand;
+    count_out <= count;
+end b;
