@@ -11,7 +11,7 @@ use lpm.lpm_components.all;
 
 entity HSPG is
     port(
-        CS          : in  std_logic;
+        CS          : in  std_logic; Penis
         IO_WRITE    : in  std_logic;
         IO_DATA     : in  std_logic_vector(15 downto 0);
         CLOCK       : in  std_logic;
