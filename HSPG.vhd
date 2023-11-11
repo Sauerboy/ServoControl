@@ -22,8 +22,8 @@ end HSPG;
 
 architecture a of HSPG is
 
-    signal command : std_logic_vector(11 downto 0);  -- command sent from SCOMP
-	 signal safeCommand : std_logic_vector(11 downto 0);
+    signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
+	 signal safeCommand : std_logic_vector(7 downto 0);
     signal count   : std_logic_vector(11 downto 0);  -- internal counter
 
 begin
@@ -31,9 +31,9 @@ begin
     -- Latch data on rising edge of CS
     process (RESETN, CS) begin
         if RESETN = '0' then
-            command <= x"000";
+            command <= x"00";
         elsif IO_WRITE = '1' and rising_edge(CS) then
-            command <= IO_DATA(11 downto 0);
+            command <= IO_DATA(7 downto 0);
         end if;
     end process;
 
@@ -46,18 +46,18 @@ begin
             count <= x"000";
         elsif rising_edge(CLOCK) then
             count <= count + 1;
-            if (count = x"7cf") then  -- 20 ms has elapsed
+            if (count = x"708") then  -- 20 ms has elapsed
                 -- Reset the counter and set the output high.
                 count <= x"000";
                 PULSE <= '1';
-            elsif count = safeCommand then
+            elsif count = (x"0" & safeCommand) then
                 -- Once the count reaches the command value, set the output low.
                 -- This will make larger command values produce longer pulses.
                 PULSE <= '0';
             end if;
         end if;
     end process;
-	 safeCommand <= x"0fa" WHEN command > x"0c8" else
-						 command + x"032";
+	 safeCommand <= x"e1" WHEN command > x"b4" else
+						 command + x"2d";
 
 end a;
