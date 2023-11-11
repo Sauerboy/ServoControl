@@ -13,8 +13,8 @@ ENTITY clk_div IS
 	PORT
 	(
 		clock_12MHz      : IN  STD_LOGIC;
-		clock_180kHz     : OUT STD_LOGIC;
 		clock_100kHz     : OUT STD_LOGIC;
+		clock_90kHz     : OUT STD_LOGIC;
 		clock_10kHz      : OUT STD_LOGIC;
 		clock_100Hz      : OUT STD_LOGIC;
 		clock_32Hz       : OUT STD_LOGIC;
@@ -29,16 +29,16 @@ ARCHITECTURE a OF clk_div IS
 	CONSTANT clk_freq    : INTEGER := 12000000;
 	CONSTANT half_freq   : INTEGER := clk_freq/2;
 	
-	SIGNAL count_180kHz     : INTEGER RANGE 0 TO half_freq/180000; 
 	SIGNAL count_100kHz     : INTEGER RANGE 0 TO half_freq/100000;
+	SIGNAL count_90kHz      : INTEGER RANGE 0 TO half_freq/90000; 
 	SIGNAL count_10kHz      : INTEGER RANGE 0 TO half_freq/10000; 
 	SIGNAL count_100Hz      : INTEGER RANGE 0 TO half_freq/100;
 	SIGNAL count_32Hz       : INTEGER RANGE 0 TO half_freq/32; 
 	SIGNAL count_10Hz       : INTEGER RANGE 0 TO half_freq/10; 
 	SIGNAL count_4Hz        : INTEGER RANGE 0 TO half_freq/4; 
 	
-	SIGNAL clock_180kHz_int : STD_LOGIC; 
 	SIGNAL clock_100kHz_int : STD_LOGIC;
+	SIGNAL clock_90kHz_int : STD_LOGIC; 
 	SIGNAL clock_10kHz_int  : STD_LOGIC; 
 	SIGNAL clock_100Hz_int  : STD_LOGIC;
 	SIGNAL clock_32Hz_int   : STD_LOGIC; 
@@ -49,14 +49,14 @@ BEGIN
 	PROCESS 
 	BEGIN
 	WAIT UNTIL RISING_EDGE(clock_12MHz);
-		
-		clock_180kHz <= clock_180kHz_int;
+	
 		clock_100kHz <= clock_100kHz_int;
+		clock_90kHz <= clock_90kHz_int;
 		clock_10kHz <= clock_10kHz_int;
 		clock_100Hz <= clock_100Hz_int;
 		clock_32Hz  <= clock_32Hz_int;
 		clock_10Hz  <= clock_10Hz_int;
-		clock_4Hz   <= clock_4Hz_int;
+		clock_4Hz  <= clock_4Hz_int;
 
 	--
 		IF count_100kHz < (half_freq/100000-1) THEN
@@ -66,11 +66,11 @@ BEGIN
 			clock_100kHz_int <= NOT(clock_100kHz_int);
 		END IF;
 		
-		IF count_180kHz < (half_freq/180000-1) THEN
-			count_180kHz <= count_180kHz + 1;
+		IF count_90kHz < (half_freq/90000-1) THEN
+			count_90kHz <= count_90kHz + 1;
 		ELSE
-			count_180kHz <= 0;
-			clock_180kHz_int <= NOT(clock_180kHz_int);
+			count_90kHz <= 0;
+			clock_90kHz_int <= NOT(clock_90kHz_int);
 		END IF;
 	--
 		IF count_10kHz < (half_freq/10000-1) THEN
