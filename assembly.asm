@@ -64,6 +64,8 @@ Scale:
 ; Divide by 9 function
 DIVIDE_NINE:
 	STORE   DIVIDEND
+    	LOADI 0
+    	STORE QUOTIENT
 DIVIDE_LOOP:
     LOAD    DIVIDEND ; Load the dividend from memory
     SUB     Nine  ; Subtract the divisor (9) from the dividend
