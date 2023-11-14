@@ -50,7 +50,7 @@ Delay:
 	OUT    Timer
 WaitingLoop:
 	IN     Timer
-	ADDI   -30 ; wait 2 seconds
+	ADDI   -60 ; wait 2 seconds
 	JNEG   WaitingLoop
 	RETURN
 Scale:
