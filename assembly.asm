@@ -9,7 +9,9 @@ Loop:
     CALL DegreeTurn
     CALL Delay
     LOADI 0
-    CALL DegreeTurn  
+    CALL DegreeTurn 
+	CALL Delay
+	JUMP Loop
 DONE:
 	JUMP DONE
 
