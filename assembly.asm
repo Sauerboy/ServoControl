@@ -4,10 +4,10 @@ ORG 0
 Loop:
     LOADI 90
     CALL DegreeTurn
-    ;CALL Delay
+    CALL Delay
     LOADI 180
     CALL DegreeTurn
-    ;CALL Delay
+    CALL Delay
     LOADI 0
     CALL DegreeTurn
     
@@ -51,7 +51,7 @@ Delay:
 	OUT    Timer
 WaitingLoop:
 	IN     Timer
-	ADDI   -20 ; wait 2 seconds
+	ADDI   -30 ; wait 2 seconds
 	JNEG   WaitingLoop
 	RETURN
 Scale:
