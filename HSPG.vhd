@@ -22,16 +22,10 @@ end HSPG;
 
 architecture a of HSPG is
 
-	 CONSTANT half_freq   : INTEGER := 45000;
-	 signal count_360Hz   : INTEGER RANGE 0 TO half_freq/360;
-	 signal clock_360Hz_int : STD_LOGIC; 
-	 
     signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
-	 signal speed	 : std_logic_vector(7 downto 0);  -- command sent from SCOMP
-	 signal safeCommand : std_logic_vector(7 downto 0);
+	 signal degreeCommand : std_logic_vector(7 downto 0);  -- command sent from SCOMP
     signal count   : std_logic_vector(11 downto 0);  -- internal counter
-	 signal mode	 : std_logic;
-	 signal upDown  : std_logic := '0';
+	 signal mode : std_logic;
 
 begin
 
@@ -40,66 +34,20 @@ begin
         if RESETN = '0' then
             command <= x"00";
         elsif IO_WRITE = '1' and rising_edge(CS) then
+            command <= IO_DATA(8 downto 1);
 				mode <= IO_DATA(0);
-				if mode = '0' then
-					command <= IO_DATA(8 downto 1);
-				else 
-					speed <= IO_DATA(8 downto 1);
-				end if;
-        end if;
-    end process;
-
-    -- This is a VERY SIMPLE way to generate a pulse.  This is not particularly
-    -- flexible and it has some issues.  It works, but you should probably consider ways
-    -- to improve this.
-    process (RESETN, CLOCK)
-    begin
-        if (RESETN = '0') then
-            count <= x"000";
-        elsif rising_edge(CLOCK) then
-            count <= count + 1;
-				
-				IF count_360Hz < (half_freq/360-1) THEN
-				count_360Hz <= count_360Hz + 1;
-				ELSE
-				count_360Hz <= 0;
-				clock_360Hz_int <= NOT(clock_360Hz_int);
-				END IF;
-				
-				
-            if (count = x"708") then  -- 20 ms has elapsed
-                -- Reset the counter and set the output high.
-                count <= x"000";
-                PULSE <= '1';
-            elsif count >= (x"0" & safeCommand) then
-                -- Once the count reaches the command value, set the output low.
-                -- This will make larger command values produce longer pulses.
-                PULSE <= '0';
-            end if;
         end if;
     end process;
 	 
-	 safeCommand <= x"e1" WHEN command > x"b4" else
-						 command + x"2d";
-						 
-	process (mode, RESETN, clock_360Hz_int)
-   begin
-	if mode = '1' then
-        if (RESETN = '0') then
-            command <= x"00";
-        elsif rising_edge(clock_360Hz_int) then
-				if updown = '1' then
-            command <= command + 1;
-					if command > x"b4" then
-					updown <= '0';
-					end if;
-				else
-				command <= command - 1;
-					if command < x"00" then
-					updown <= '1';
-					end if;
-        end if;
-		  end if;
-		end if;
-    end process;
+	 with mode select degreeCommand <=
+	 command when '0',
+	 x"00" when '1';
+	 
+	 DegreeControl: work.DegreeControl
+			port map(
+			CLOCK => CLOCK,
+			COMMAND => degreeCommand,
+			RESETN => RESETN,
+			PULSE => PULSE);
+
 end a;
