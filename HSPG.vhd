@@ -39,9 +39,18 @@ begin
         end if;
     end process;
 	 
-	 with mode select degreeCommand <=
-	 command when '0',
-	 x"00" when '1';
+	 process (CLOCK)
+	 begin
+	 case mode is
+		when '0' => degreeCommand <= command;
+		when '1' => 
+		if rising_edge(Clock) then
+			degreeCommand <= degreeCommand + 1;
+			end if;
+		end case;
+	end process;
+	 
+	 
 	 
 	 DegreeControl: work.DegreeControl
 			port map(
