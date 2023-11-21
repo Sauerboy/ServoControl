@@ -149,6 +149,13 @@ SprinklerNEG:
     JPOS SprinklerNEG
     RETURN
     
+RCturn: ; Turn while centered in middle. Switch inputs as turns
+	CALL SetMid
+    
+WindShieldWiper: ;Speed up towards middle, slow down near end, more advanced bounce and sprinkler
+    
+    
+    
 WaitInput1:
 	IN Switches
     AND BitmaskLast
