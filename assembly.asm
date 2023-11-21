@@ -17,6 +17,7 @@ DONE:
 
 ; @AC should contain the amount of degrees user wants to turn with respect to origin
 DegreeTurn:
+   OUT Hex0
 	CALL Scale
 	OUT Servo
     Return
@@ -33,14 +34,12 @@ SetZero:
 ; @return the pulse in ms should be in AC once returned
 SetMax:
 	LOADI 180
-    CALL Scale
-    OUT Servo
+    CALL DegreeTurn
     Return
     
  SetMid:
  	LOADI 90
-    CALL Scale
-    OUT Servo
+    CALL DegreeTurn
     Return
 
 bounce:
