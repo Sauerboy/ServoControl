@@ -5,6 +5,7 @@ Loop:
 DEMO1: ;Show basic functionality with switches
     IN Switches
     OUT Servo
+    OUT LEDs
     AND BitmaskLast
     JZERO DEMO1
 DEMO2: ;Show precision degree turns within assmebly
@@ -45,7 +46,7 @@ DEMO3: ; Demonstrate Sprinkler Mode
 DEMO4: ; Demonstrate Applications: FAN
 	LOADI 6
     CALL Bounce
-    
+    CALL WaitInput0
 DONE:
 	IN Switches
     AND BitmaskFirst4
@@ -103,8 +104,6 @@ Bounce:
     JPOS Bounce
     RETURN
     
- SpeedMode: ; Put Speed mode in assembly
- 	STORE Speed
  	
 Sprinkler:
 	STORE BounceCount
@@ -178,6 +177,22 @@ WaitingLoop:
 	ADDI   -2
 	JNEG   WaitingLoop
 	RETURN
+    
+    
+    
+DegreeTurnS:
+	CALL Scale
+    
+    
+SpeedDelay:
+	OUT    Timer
+SpeedWait:
+   	IN     Timer
+	SUB Speed
+	JNEG   SpeedWait
+	RETURN
+	
+    
 Scale:
 	STORE Value
 	SHIFT 3 ;x8
@@ -205,7 +220,7 @@ DIVIDE_DONE:
     RETURN
 
 ; Constants
-ORG 150
+ORG 200
 Nine: DW 9
 QUOTIENT: DW 0
 DIVIDEND: DW 0
