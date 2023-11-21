@@ -45,7 +45,7 @@ begin
     end process;
 	 
 	 
-	PROCESS(CLOCk, command)
+	PROCESS(CLOCK, command)
 	BEGIN
 	if RISING_EDGE(CLOCK) then
 	IF count_speed_clock < (half_freq/ (to_integer(IEEE.numeric_std.unsigned(command + x"01")))) THEN
@@ -62,16 +62,22 @@ begin
 	 process (speed_clock)
 	 begin
 	 case mode is
-		when '0' => degreeCommand <= command;
+		when '0' => if command > x"b4" then
+						degreeCommand <= x"b4";
+						else degreeCommand <= command;
+						end if;
 		when '1' => 
 		if rising_edge(speed_clock) then
 			if (updown = '1') then
 			degreeCommand <= degreeCommand + x"01";
-			else 
-			degreeCommand <= degreeCommand - x"01";
+			if (degreeCommand = x"b4") then 
+			upDown <= '0';
 			end if;
-			if (degreeCommand >= 180 or degreeCommand <= 0) then
-			upDown <= NOT(upDown);
+			elsif (updown = '0' and degreeCommand > 0) then
+			degreeCommand <= degreeCommand - x"01";
+			if (degreeCommand <= x"01") then
+			upDown <= '1';
+			end if;
 			end if;
 			end if;
 		end case;
