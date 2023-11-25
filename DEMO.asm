@@ -1,5 +1,23 @@
-; Infinite loop where the customers program can be written
-; Every value inputed to servo must be scaled by 8/9 exp. 180 *(8/9) = 160. We out 160 to servo to get 180 degree turn
+; Main Program: Customized SCOMP API for various customer applications.
+;				Implemented functions are as follows:
+;               -- DegreeTurn:
+;                   - Using a degree value stored in AC prior to CALL, 
+;					  this function turns to the exact degree requested
+;                   - Automatically displays value in decimal on Hex Display
+;					- SetMax, SetZero, SetMid are subfunctions
+;					- Scale preset to 8/9
+;				-- Scale
+;					- Scaling factor for the output to servo
+;					- Due to manufacturing variability and indivudual servo differences,
+;					  this scaling factor is presented to allow the customer to account for those differences
+;					- Every value inputed to servo must be scaled by 8/9 exp. 180 *(8/9) = 160. We out 160 to servo to get 180 degree turn
+;				-- Sprinkler
+;					- Autonomous function that to behave like a sprinkler by moving forward 16 degrees
+;					  then moving back 8 degrees
+;				-- Bounce
+;					- Autonomous function that controls the speed bounce functionality of the Servo
+;					- Input speed into AC, and the servo will bounce smoothly at that speed.
+;
 ORG 0
 Loop:
 DEMO1: ;Show basic functionality with switches
@@ -44,8 +62,15 @@ DEMO3: ; Demonstrate Sprinkler Mode
 	CALL WaitInput1
 
 DEMO4: ; Demonstrate Applications: FAN
-	LOADI 6
+	LOADI 32
     CALL Bounce
+    CALL Delay
+    LOADI 64
+    CALL Bounce
+    CALL Delay
+    LOADI 128
+    CALL Bounce
+    CALL Delay
     CALL WaitInput0
 DONE:
 	IN Switches
@@ -66,7 +91,16 @@ DONE:
 
 ; @AC should contain the amount of degrees user wants to turn with respect to origin
 DegreeTurn:
-    OUT Hex0
+    STORE DECIMAL_VAL
+	STORE CONVERT
+    LOADI -1
+    STORE INCREMENT
+    LOADI 0
+    STORE RESULT
+	CALL DISPLAY_CONV
+	OUT Hex0
+
+	LOAD DECIMAL_VAL
 	CALL Scale
 	OUT Servo
     Return
@@ -78,6 +112,7 @@ SetZero:
 	LOADI 0
     CALL DegreeTurn
     Return
+
 ; @AC dont care
 ; Sets pulse to 2.5ms
 ; @return the pulse in ms should be in AC once returned
@@ -87,24 +122,21 @@ SetMax:
     OUT Servo
     Return
     
- SetMid:
+SetMid:
  	LOADI 90
     CALL DegreeTurn
     Return
 
-Bounce:
-	STORE BounceCount
-	CALL SetMax
-    CALL Delay
-    CALL SetZero
-    CALL Delay
-    LOAD BounceCount
-    SUB  One
-    STORE BounceCount
-    JPOS Bounce
+Bounce: ; Put speed in AC, out the speed: Larger numnber = faster
+		; Range is 8 bits or 0-128
+    SHIFT 1
+	STORE Speed
+    OR Bitmask1
+    OUT Servo
     RETURN
     
- 	
+; Spinkler function
+; @AC put number of desired cycles
 Sprinkler:
 	STORE BounceCount
     LOADI 0
@@ -174,14 +206,9 @@ Delay:
 	OUT    Timer
 WaitingLoop:
 	IN     Timer
-	ADDI   -2
+	ADDI   -50
 	JNEG   WaitingLoop
 	RETURN
-    
-    
-    
-DegreeTurnS:
-	CALL Scale
     
     
 SpeedDelay:
@@ -219,12 +246,125 @@ DIVIDE_DONE:
     LOAD    QUOTIENT ; Load the final quotient
     RETURN
 
+; DISPLAY LOGIC
+DISPLAY_CONV:
+    LOAD INCREMENT
+    ADDI 1
+    STORE INCREMENT
+
+    LOAD CONVERT
+    STORE MOD1
+    CALL MODULO
+
+    CALL SHIFT16
+    LOAD RESULT
+    ADD SHIFTVAL
+    STORE RESULT
+
+    LOAD CONVERT
+    CALL DIVIDE_TEN
+    STORE CONVERT
+
+    JZERO END_CONV
+    JUMP DISPLAY_CONV
+
+END_CONV:
+	LOAD RESULT
+    RETURN
+
+DIVIDE_TEN:
+	STORE DIVIDEND
+    LOADI 10
+    STORE DIVISOR
+    LOADI 0
+    STORE QUOTIENT
+    CALL DIVIDE_LOOP
+    RETURN
+
+
+;MOD1 % 10
+MODULO:
+    LOAD MOD1
+    ADDI -10
+    STORE MOD1
+    JNEG MODULO_DONE
+    JZERO MODULO_ZERO
+    JUMP MODULO
+MODULO_DONE:
+	LOAD MOD1
+    ADDI 10
+    STORE MOD2
+    RETURN
+MODULO_ZERO:
+	LOADI 0
+    STORE MOD2
+    RETURN
+
+MULT:
+	LOAD PROD1
+    ADDI -1
+    STORE PROD1
+
+    JZERO MULT_DONE
+    JNEG MULT_ZERO
+
+    LOAD PROD3
+    ADD PROD2
+    STORE PROD3
+
+    JUMP MULT
+MULT_DONE:
+	LOAD PROD3
+    ADD PROD2
+    STORE PROD3
+    RETURN
+MULT_ZERO:
+	LOADI 0
+   	STORE PROD3
+    RETURN
+
+SHIFT16:
+    STORE SHIFTVAL
+	LOAD INCREMENT
+    STORE PROD1
+    LOADI 4
+    STORE PROD2
+    LOADI 0
+    STORE PROD3
+    CALL MULT
+    CALL SHIFT2LOOP
+    RETURN
+
+SHIFT2LOOP:
+	LOAD PROD3
+    ADDI -1
+    STORE PROD3
+    JNEG SHIFT2LOOP_END
+
+    LOAD SHIFTVAL
+	SHIFT 1
+    STORE SHIFTVAL
+    LOAD PROD2
+
+    JPOS SHIFT2LOOP
+
+    RETURN
+
+SHIFT2LOOP_END:
+	RETURN
+
+
+
+
+
+
 ; Constants
-ORG 200
-Nine: DW 9
+ORG 300
+DIVISOR: DW 0
 QUOTIENT: DW 0
 DIVIDEND: DW 0
 Value: DW 0
+Nine: DW 9
 BitmaskFirst4: DW  &H000F
 Bitmask1: DW  &H0001
 Bitmask2: DW  &H0002
@@ -239,6 +379,17 @@ MAX: DW 200
 MIN: DW 0
 SprinklerV: DW 0
 x: DW 0
+MOD1: DW 0
+MOD2: DW 0
+MOD3: DW 0
+PROD1: DW 0
+PROD2: DW 0
+PROD3: DW 0
+CONVERT: DW 0
+RESULT: DW 0
+SHIFTVAL: DW 1
+INCREMENT: DW -1
+DECIMAL_VAL: DW 0
 
 
 
