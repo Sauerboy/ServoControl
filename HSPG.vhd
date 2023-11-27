@@ -24,13 +24,13 @@ end HSPG;
 architecture a of HSPG is
 
     signal command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
-	 signal degreeCommand : std_logic_vector(7 downto 0);  -- command sent from SCOMP
+	 signal degree_command : std_logic_vector(7 downto 0);  -- command sent from SCOMP
     signal count   : std_logic_vector(11 downto 0);  -- internal counter
-	 signal mode : std_logic;
+	 signal mode : std_logic; -- 0 is degree mode, 1 is speed mode
 	 CONSTANT half_freq   : INTEGER := 90000/2;
-	 signal speed_clock : std_logic;
-	 SIGNAL count_speed_clock        : INTEGER RANGE 0 TO half_freq; 
-	 signal updown : std_logic;
+	 signal speed_clock : std_logic; -- variable speed clock used in speed control
+	 SIGNAL count_speed_clock        : INTEGER RANGE 0 TO half_freq; -- used to generate speed clock. 
+	 signal up_down : std_logic; -- controls whether angle of servo is incremented or decremented when in speed mode.
 
 begin
 
@@ -40,20 +40,20 @@ begin
             command <= x"00";
         elsif IO_WRITE = '1' and rising_edge(CS) then
             command <= IO_DATA(8 downto 1);
-				mode <= IO_DATA(0);
+				mode <= IO_DATA(0); -- Assign LSB of IO_DATA to mode
         end if;
     end process;
 	 
 	 
-	PROCESS(CLOCK, command)
-	BEGIN
-	if RISING_EDGE(CLOCK) then
-	IF count_speed_clock < (half_freq/ (to_integer(IEEE.numeric_std.unsigned(command + x"01")))) THEN
+	process(CLOCK, command)
+	begin
+	if rising_edge(CLOCK) then
+	if count_speed_clock < (half_freq/ (to_integer(IEEE.numeric_std.unsigned(command + x"01")))) then
 			count_speed_clock <= count_speed_clock + 1;
-		ELSE
+		else
 			count_speed_clock <= 0;
 			speed_clock <= NOT(speed_clock);
-		END IF;
+		end if;
 	end if;
 	end process;
 	
@@ -61,22 +61,24 @@ begin
 	
 	 process (speed_clock)
 	 begin
-	 case mode is
-		when '0' => if command > x"b4" then
-						degreeCommand <= x"b4";
-						else degreeCommand <= command;
+	 case mode is 
+		when '0' => if command > x"b4" then -- when in degree mode, assign the degree_command to command
+														--  as long as it's in a safe range
+						degree_command <= x"b4";
+						else degree_command <= command;
 						end if;
-		when '1' => 
+		when '1' => -- increment/decrement degree_command every clock cycle depending on up_down
+						-- when a max/min is hit, invert up_down
 		if rising_edge(speed_clock) then
-			if (updown = '1') then
-			degreeCommand <= degreeCommand + x"01";
-			if (degreeCommand = x"b4") then 
-			upDown <= '0';
+			if (up_down = '1') then
+			degree_command <= degree_command + x"01";
+			if (degree_command = x"b4") then 
+			up_down <= '0';
 			end if;
-			elsif (updown = '0' and degreeCommand > 0) then
-			degreeCommand <= degreeCommand - x"01";
-			if (degreeCommand <= x"01") then
-			upDown <= '1';
+			elsif (up_down = '0' and degree_command > 0) then
+			degree_command <= degree_command - x"01";
+			if (degree_command <= x"01") then
+			up_down <= '1';
 			end if;
 			end if;
 			end if;
@@ -84,11 +86,11 @@ begin
 	end process;
 	 
 	 
-	 
+	 -- map to degree_control VHDL
 	 DegreeControl: work.DegreeControl
 			port map(
 			CLOCK => CLOCK,
-			COMMAND => degreeCommand,
+			COMMAND => degree_command,
 			RESETN => RESETN,
 			PULSE => PULSE);
 
