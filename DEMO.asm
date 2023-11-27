@@ -72,6 +72,11 @@ DEMO4: ; Demonstrate Applications: FAN
     CALL Bounce
     CALL Delay
     CALL WaitInput0
+
+DEMO5: 
+	CALL WindShieldWiper
+	CALL WaitInput0
+
 DONE:
 	IN Switches
     AND BitmaskFirst4
@@ -184,6 +189,28 @@ RCturn: ; Turn while centered in middle. Switch inputs as turns
 	CALL SetMid
     
 WindShieldWiper: ;Speed up towards middle, slow down near end, more advanced bounce and sprinkler
+    ;Still need to adjust delay times but it should work
+	STORE MiddleSpeed
+	LOADI 16
+	CALL Bounce
+	LOADI 200
+	CALL Delay
+	LOAD MiddleSpeed
+	CALL Bounce
+	LOADI 100
+	CALL Delay
+	LOADI 16
+	CALL Bounce
+	LOADI 200
+	CALL Delay
+	LOAD WSCount
+	SUB One
+	JZERO WSEnd
+	LOAD MiddleSpeed
+	JUMP WindShieldWiper
+	
+WSEnd:
+	RETURN
     
     
     
@@ -390,7 +417,7 @@ RESULT: DW 0
 SHIFTVAL: DW 1
 INCREMENT: DW -1
 DECIMAL_VAL: DW 0
-
+WSCount: DW 0
 
 
 ; IO address constants
