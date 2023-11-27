@@ -19,7 +19,7 @@ entity DegreeControl is
 end DegreeControl;
 
 architecture a of DegreeControl is
-	 signal safeCommand : std_logic_vector(7 downto 0);
+	 signal safe_command : std_logic_vector(7 downto 0);
     signal count   : std_logic_vector(11 downto 0);  -- internal counter
 
 begin
@@ -38,14 +38,16 @@ begin
                 -- Reset the counter and set the output high.
                 count <= x"000";
                 PULSE <= '1';
-            elsif count >= (x"0" & safeCommand) then
+            elsif count >= (x"0" & safe_command) then
                 -- Once the count reaches the command value, set the output low.
                 -- This will make larger command values produce longer pulses.
                 PULSE <= '0';
             end if;
         end if;
     end process;
-	 safeCommand <= x"e1" WHEN COMMAND > x"b4" else
+	 -- safe_command represents a number 45-225 which
+	 -- determines the duration of a pulse
+	 safe_command <= x"e1" WHEN COMMAND > x"b4" else
 						 COMMAND + x"2d";
 
 end a;
