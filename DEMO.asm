@@ -40,42 +40,37 @@ DEMO2: ;Show precision degree turns within assmebly
     LOADI 10
     CALL DegreeTurn
     CALL WaitInput1
-    LOADI 16
-    CALL DegreeTurn
-    CALL WaitInput0
     LOADI 20
     CALL DegreeTurn
-    CALL WaitInput1
+    CALL WaitInput0
     LOADI 30
     CALL DegreeTurn
+    CALL WaitInput1
+    LOADI 40
+    CALL DegreeTurn
     CALL WaitInput0
-    LOADI 46
+    LOADI 60
     CALL DegreeTurn
     CALL WaitInput1
-    LOADI 60
+    LOADI 90
     CALL DegreeTurn
     CALL WaitInput0
     
 DEMO3: ; Demonstrate Sprinkler Mode
-	LOADI 6
+	LOADI 5
     CALL Sprinkler
 	CALL WaitInput1
 
 DEMO4: ; Demonstrate Applications: FAN
 	LOADI 32
     CALL Bounce
-    CALL Delay
+    CALL WaitInput0
     LOADI 64
     CALL Bounce
-    CALL Delay
+    CALL WaitInput1
     LOADI 128
     CALL Bounce
-    CALL Delay
     CALL WaitInput0
-DEMO5:
-	LOADI 100
-	CALL WindShieldWiper
-	CALL WaitInput0
 DONE:
 	IN Switches
     AND BitmaskFirst4
@@ -206,6 +201,7 @@ WindShieldWiper: ;Speed up towards middle, slow down near end, more advanced bou
 	CALL Delay1
 	LOAD WSCount
 	SUB One
+	STORE WSCount
 	JZERO WSEnd
 	LOAD MiddleSpeed
 	JUMP WindShieldWiper
@@ -269,11 +265,13 @@ Scale:
 ; Divide by 9 function
 DIVIDE_NINE:
 	STORE   DIVIDEND
-    	LOADI 0
-    	STORE QUOTIENT
+	LOADI 9
+	STORE DIVISOR
+    LOADI 0
+    STORE QUOTIENT
 DIVIDE_LOOP:
     LOAD    DIVIDEND ; Load the dividend from memory
-    SUB     Nine  ; Subtract the divisor (9) from the dividend
+    SUB     DIViSOR  ; Subtract the divisor (9) from the dividend
     STORE   DIVIDEND ; Store the updated dividend
     JNEG    DIVIDE_DONE ; If AC < 0, we are done
 
@@ -431,7 +429,7 @@ SHIFTVAL: DW 1
 INCREMENT: DW -1
 DECIMAL_VAL: DW 0
 MiddleSpeed: DW 0
-WSCount: DW 0
+WSCount: DW 10
 
 
 
