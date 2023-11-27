@@ -40,7 +40,7 @@ DEMO2: ;Show precision degree turns within assmebly
     LOADI 10
     CALL DegreeTurn
     CALL WaitInput1
-    LOADI 15
+    LOADI 16
     CALL DegreeTurn
     CALL WaitInput0
     LOADI 20
@@ -49,7 +49,7 @@ DEMO2: ;Show precision degree turns within assmebly
     LOADI 30
     CALL DegreeTurn
     CALL WaitInput0
-    LOADI 45
+    LOADI 46
     CALL DegreeTurn
     CALL WaitInput1
     LOADI 60
@@ -101,6 +101,11 @@ DegreeTurn:
 	OUT Hex0
 
 	LOAD DECIMAL_VAL
+	CALL Scale
+	OUT Servo
+    Return
+
+DegreeTurnND:
 	CALL Scale
 	OUT Servo
     Return
@@ -206,7 +211,7 @@ Delay:
 	OUT    Timer
 WaitingLoop:
 	IN     Timer
-	ADDI   -50
+	ADDI   -3
 	JNEG   WaitingLoop
 	RETURN
     
@@ -222,8 +227,8 @@ SpeedWait:
     
 Scale:
 	STORE Value
-	SHIFT 3 ;x8
-    CALL DIVIDE_NINE
+	CALL DIVIDE_NINE
+	SHIFT 4 ;x16
     Return
     
 ; Divide by 9 function
