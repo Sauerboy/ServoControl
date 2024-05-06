@@ -37,9 +37,7 @@ begin
         end if;
     end process;
 
-    -- This is a VERY SIMPLE way to generate a pulse.  This is not particularly
-    -- flexible and it has some issues.  It works, but you should probably consider ways
-    -- to improve this.
+    
     process (RESETN, CLOCK)
     begin
         if (RESETN = '0') then
